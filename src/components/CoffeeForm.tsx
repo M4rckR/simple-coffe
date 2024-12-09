@@ -1,16 +1,26 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DrafProducto } from "../types"
 import { useCoffee } from "../hooks/useCoffee"
 
 export const CoffeeForm = () => {
 
-    const {dispatch} = useCoffee()
+    const {dispatch,state} = useCoffee()
 
     const [producto, setProducto] = useState<DrafProducto>({
         nombrePlato: "",
         cantidadPlato: null,
         precioPlato: null
     })
+
+   useEffect(() => {
+    if(state.activeID){
+        const productoEdit = state.productos.find(item => item.id === state.activeID)
+        if(productoEdit){
+            setProducto(productoEdit)
+        }
+    }
+   }, [state.activeID, state.productos])
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
@@ -31,8 +41,16 @@ export const CoffeeForm = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
-        // if(!producto.nombrePlato || !producto.cantidadPlato || !producto.precioPlato) return
-        dispatch({type: "ADD_PRODUCTO", payload: producto})
+
+        
+        if(!producto.nombrePlato || !producto.cantidadPlato || !producto.precioPlato) return
+
+        if(state.activeID){
+            dispatch({type: "EDIT_PRODUCTO", payload: {...producto, id: state.activeID}})
+        }else {
+            dispatch({type: "ADD_PRODUCTO", payload: producto})
+        }
+        
 
         setProducto({
             nombrePlato: "",
@@ -43,7 +61,9 @@ export const CoffeeForm = () => {
 
   return (
     <div className="bg-m-white p-5 rounded-xl">
-        <h3 className="text-2xl text-m-coffee-black mb-5 font-medium">Nueva entrada de menu</h3>
+        <h3 className="text-2xl text-m-coffee-black mb-5 font-medium">
+            {state.activeID? 'Editar Producto': 'Agregar Producto'}
+        </h3>
         <form onSubmit={handleSubmit}>
             <div className="mb-5">
                 <label className="block mb-2 text-sm font-medium text-m-coffee" htmlFor="nombrePlato">Nombre de plato</label>
@@ -90,7 +110,7 @@ export const CoffeeForm = () => {
                     focus:outline-none font-medium rounded-lg text-sm w-full 
                     sm:w-auto px-5 py-2.5 text-center`}
                 type="submit" 
-                value="Agregar" />
+                value={state.activeID? 'Actualizar': 'Agregar'} />
         </form>
     </div>
   )
